@@ -26,6 +26,9 @@ public protocol ServerDelegate: AnyObject {
 
     /// Called only when the session is updated with intention of the dAppt.
     func server(_ server: Server, didUpdate session: Session)
+    
+    /// Called only when there is an error about the deserialization.
+    func server(_ server: Server, didFailDeserializationFor url: WCURL)
 }
 
 public protocol ServerDelegateV2: ServerDelegate {
@@ -150,6 +153,13 @@ open class Server: WalletConnect {
         if let delegate = delegate as? ServerDelegateV2 {
             delegate.server(self, willReconnect: session)
         }
+    }
+    
+    override func onDeserializationError(for url: WCURL) {
+        delegate?.server(
+            self,
+            didFailDeserializationFor: url
+        )
     }
 
     /// Sends response for the create session request.

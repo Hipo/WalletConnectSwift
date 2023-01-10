@@ -39,6 +39,7 @@ class WebSocketConnection {
     private let onConnect: (() -> Void)?
     private let onDisconnect: ((Error?) -> Void)?
     private let onTextReceive: ((String) -> Void)?
+    private let onDeserializationError: (() -> Void)?
 
     // needed to keep connection alive
     private var pingTimer: Timer?
@@ -57,12 +58,14 @@ class WebSocketConnection {
     init(url: WCURL,
          onConnect: (() -> Void)?,
          onDisconnect: ((Error?) -> Void)?,
-         onTextReceive: ((String) -> Void)?
+         onTextReceive: ((String) -> Void)?,
+         onDeserializationError: (() -> Void)?
     ) {
         self.url = url
         self.onConnect = onConnect
         self.onDisconnect = onDisconnect
         self.onTextReceive = onTextReceive
+        self.onDeserializationError = onDeserializationError
 
     #if os(iOS)
         // On actual iOS devices, request some additional background execution time to the OS
@@ -228,16 +231,21 @@ private extension WebSocketConnection {
         case .messageReceived(let text):
             onTextReceive?(text)
         case .messageSent(let text):
-            if let request = try? requestSerializer.deserialize(text, url: url).json().string {
+            do {
+                let request = try requestSerializer.deserialize(text, url: url).json().string
                 LogService.shared.detailed("WC: ==> [request] \(request)")
-            } else if let response = try? responseSerializer.deserialize(text, url: url).json().string {
-                if response.contains("\"error\"") {
-                    LogService.shared.error("WC: ==> [response] \(response)")
+            } catch {
+                if let response = try? responseSerializer.deserialize(text, url: url).json().string {
+                    if response.contains("\"error\"") {
+                        LogService.shared.error("WC: ==> [response] \(response)")
+                    } else {
+                        LogService.shared.detailed("WC: ==> [response] \(response)")
+                    }
                 } else {
-                    LogService.shared.detailed("WC: ==> [response] \(response)")
+                    LogService.shared.detailed("WC: ==> \(text)")
                 }
-            } else {
-                LogService.shared.detailed("WC: ==> \(text)")
+                
+                onDeserializationError?()
             }
         case .pingSent:
             LogService.shared.verbose("WC: ==> ping")

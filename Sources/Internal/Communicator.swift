@@ -63,14 +63,20 @@ class Communicator {
 
     // MARK: - Transport
 
-    func listen(on url: WCURL,
-                onConnect: @escaping ((WCURL) -> Void),
-                onDisconnect: @escaping ((WCURL, Error?) -> Void),
-                onTextReceive: @escaping (String, WCURL) -> Void) {
-        transport.listen(on: url,
-                         onConnect: onConnect,
-                         onDisconnect: onDisconnect,
-                         onTextReceive: onTextReceive)
+    func listen(
+        on url: WCURL,
+        onConnect: @escaping ((WCURL) -> Void),
+        onDisconnect: @escaping ((WCURL, Error?) -> Void),
+        onTextReceive: @escaping (String, WCURL) -> Void,
+        onDeserializationError: @escaping ((WCURL) -> Void)
+    ) {
+        transport.listen(
+            on: url,
+            onConnect: onConnect,
+            onDisconnect: onDisconnect,
+            onTextReceive: onTextReceive,
+            onDeserializationError: onDeserializationError
+        )
     }
 
     func subscribe(on topic: String, url: WCURL) {

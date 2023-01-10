@@ -6,10 +6,13 @@ import Foundation
 
 protocol Transport {
     func send(to url: WCURL, text: String)
-    func listen(on url: WCURL,
-                onConnect: @escaping ((WCURL) -> Void),
-                onDisconnect: @escaping ((WCURL, Error?) -> Void),
-                onTextReceive: @escaping (String, WCURL) -> Void)
+    func listen(
+        on url: WCURL,
+        onConnect: @escaping ((WCURL) -> Void),
+        onDisconnect: @escaping ((WCURL, Error?) -> Void),
+        onTextReceive: @escaping (String, WCURL) -> Void,
+        onDeserializationError: @escaping ((WCURL) -> Void)
+    )
     func isConnected(by url: WCURL) -> Bool
     func disconnect(from url: WCURL)
 }
@@ -32,10 +35,13 @@ class Bridge: Transport {
         }
     }
 
-    func listen(on url: WCURL,
-                onConnect: @escaping ((WCURL) -> Void),
-                onDisconnect: @escaping ((WCURL, Error?) -> Void),
-                onTextReceive: @escaping (String, WCURL) -> Void) {
+    func listen(
+        on url: WCURL,
+        onConnect: @escaping ((WCURL) -> Void),
+        onDisconnect: @escaping ((WCURL, Error?) -> Void),
+        onTextReceive: @escaping (String, WCURL) -> Void,
+        onDeserializationError: @escaping ((WCURL) -> Void)
+    ) {
         dispatchPrecondition(condition: .notOnQueue(syncQueue))
         syncQueue.sync { [weak self] in
             guard let `self` = self else { return }
@@ -43,12 +49,17 @@ class Bridge: Transport {
             if let existingConnection = self.findConnection(url: url) {
                 connection = existingConnection
             } else {
-                connection = WebSocketConnection(url: url,
-                                                 onConnect: { onConnect(url) },
-                                                 onDisconnect: { [weak self] error in
-                                                    self?.releaseConnection(by: url)
-                                                    onDisconnect(url, error) },
-                                                 onTextReceive: { text in onTextReceive(text, url) })
+                connection = WebSocketConnection(
+                    url: url,
+                    onConnect: { onConnect(url) },
+                    onDisconnect: {
+                        [weak self] error in
+                        self?.releaseConnection(by: url)
+                        onDisconnect(url, error)
+                    },
+                    onTextReceive: { text in onTextReceive(text, url) },
+                    onDeserializationError: { onDeserializationError(url) }
+                )
                 self.connections.append(connection)
             }
             if !connection.isOpen {
