@@ -67,15 +67,15 @@ open class WalletConnect {
         let onTextReceive: ((String, WCURL) -> Void) = { [weak self] (text, url) in
             self?.onTextReceive(text, from: url)
         }
-        let onDeserializationError: ((WCURL) -> Void) = { [weak self] (url) in
-            self?.onDeserializationError(for: url)
+        let onError: ((WCURL, Error?) -> Void) = { [weak self] (url, error) in
+            self?.onError(for: url, error: error)
         }
         communicator.listen(
             on: url,
             onConnect: onConnect,
             onDisconnect: onDisconnect,
             onTextReceive: onTextReceive,
-            onDeserializationError: onDeserializationError
+            onError: onError
         )
     }
 
@@ -135,7 +135,7 @@ open class WalletConnect {
         preconditionFailure("Should be implemented in subclasses")
     }
     
-    func onDeserializationError(for url: WCURL) {
+    func onError(for url: WCURL, error: Error?) {
         preconditionFailure("Should be implemented in subclasses")
     }
 

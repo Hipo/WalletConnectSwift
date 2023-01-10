@@ -68,14 +68,14 @@ class Communicator {
         onConnect: @escaping ((WCURL) -> Void),
         onDisconnect: @escaping ((WCURL, Error?) -> Void),
         onTextReceive: @escaping (String, WCURL) -> Void,
-        onDeserializationError: @escaping ((WCURL) -> Void)
+        onError: @escaping ((WCURL, Error?) -> Void)
     ) {
         transport.listen(
             on: url,
             onConnect: onConnect,
             onDisconnect: onDisconnect,
             onTextReceive: onTextReceive,
-            onDeserializationError: onDeserializationError
+            onError: onError
         )
     }
 

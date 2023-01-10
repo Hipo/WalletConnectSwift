@@ -39,7 +39,7 @@ class WebSocketConnection {
     private let onConnect: (() -> Void)?
     private let onDisconnect: ((Error?) -> Void)?
     private let onTextReceive: ((String) -> Void)?
-    private let onDeserializationError: (() -> Void)?
+    private let onError: ((Error?) -> Void)?
 
     // needed to keep connection alive
     private var pingTimer: Timer?
@@ -59,13 +59,13 @@ class WebSocketConnection {
          onConnect: (() -> Void)?,
          onDisconnect: ((Error?) -> Void)?,
          onTextReceive: ((String) -> Void)?,
-         onDeserializationError: (() -> Void)?
+         onError: ((Error?) -> Void)?
     ) {
         self.url = url
         self.onConnect = onConnect
         self.onDisconnect = onDisconnect
         self.onTextReceive = onTextReceive
-        self.onDeserializationError = onDeserializationError
+        self.onError = onError
 
     #if os(iOS)
         // On actual iOS devices, request some additional background execution time to the OS
@@ -245,7 +245,7 @@ private extension WebSocketConnection {
                     LogService.shared.detailed("WC: ==> \(text)")
                 }
                 
-                onDeserializationError?()
+                onError?(error)
             }
         case .pingSent:
             LogService.shared.verbose("WC: ==> ping")

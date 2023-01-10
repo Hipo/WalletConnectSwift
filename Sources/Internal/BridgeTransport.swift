@@ -11,7 +11,7 @@ protocol Transport {
         onConnect: @escaping ((WCURL) -> Void),
         onDisconnect: @escaping ((WCURL, Error?) -> Void),
         onTextReceive: @escaping (String, WCURL) -> Void,
-        onDeserializationError: @escaping ((WCURL) -> Void)
+        onError: @escaping ((WCURL, Error?) -> Void)
     )
     func isConnected(by url: WCURL) -> Bool
     func disconnect(from url: WCURL)
@@ -40,7 +40,7 @@ class Bridge: Transport {
         onConnect: @escaping ((WCURL) -> Void),
         onDisconnect: @escaping ((WCURL, Error?) -> Void),
         onTextReceive: @escaping (String, WCURL) -> Void,
-        onDeserializationError: @escaping ((WCURL) -> Void)
+        onError: @escaping ((WCURL, Error?) -> Void)
     ) {
         dispatchPrecondition(condition: .notOnQueue(syncQueue))
         syncQueue.sync { [weak self] in
@@ -58,7 +58,9 @@ class Bridge: Transport {
                         onDisconnect(url, error)
                     },
                     onTextReceive: { text in onTextReceive(text, url) },
-                    onDeserializationError: { onDeserializationError(url) }
+                    onError: { error in
+                        onError(url, error)
+                    }
                 )
                 self.connections.append(connection)
             }
