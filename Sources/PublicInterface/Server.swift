@@ -28,7 +28,7 @@ public protocol ServerDelegate: AnyObject {
     func server(_ server: Server, didUpdate session: Session)
     
     /// Called only when there is an error about the deserialization.
-    func server(_ server: Server, didFailWithError: Error?, for url: WCURL)
+    func server(_ server: Server, didFailWith error: Error?, for url: WCURL)
 }
 
 public protocol ServerDelegateV2: ServerDelegate {
@@ -158,7 +158,7 @@ open class Server: WalletConnect {
     override func onError(for url: WCURL, error: Error?) {
         delegate?.server(
             self,
-            didFailWithError: error,
+            didFailWith: error,
             for: url
         )
     }
