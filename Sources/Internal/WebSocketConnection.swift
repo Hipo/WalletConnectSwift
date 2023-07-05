@@ -84,10 +84,7 @@ class WebSocketConnection {
             object: nil,
             queue: OperationQueue.main
         ) { [weak self] _ in
-            guard let self else { return }
-
-            self.requestBackgroundExecutionTime()
-            self.close()
+            self?.requestBackgroundExecutionTime()
         }
 
         self.foregroundNotificationObserver = NotificationCenter.default.addObserver(
@@ -95,13 +92,7 @@ class WebSocketConnection {
             object: nil,
             queue: OperationQueue.main
         ) { [weak self] _ in
-            guard let self else { return }
-
-            self.endBackgroundExecutionTime()
-
-            if self.task == nil || !self.isOpen {
-                self.open()
-            }
+            self?.endBackgroundExecutionTime()
         }
     #endif
     }
@@ -204,16 +195,7 @@ private extension WebSocketConnection {
             onConnect?()
         case .disconnected(let closeCode):
             guard isConnected else { break }
-
             isConnected = false
-
-            if bgTaskIdentifier != .invalid {
-                LogService.shared.info("WC: disconnected (background)")
-
-                endBackgroundExecutionTime()
-                return
-            }
-
             pingTimer?.invalidate()
 
             var error: Error? = nil
