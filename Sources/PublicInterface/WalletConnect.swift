@@ -49,6 +49,10 @@ open class WalletConnect {
         communicator.addOrUpdatePendingDisconnectSession(session)
         communicator.disconnect(from: session.url)
     }
+    
+    open func isConnected(by url: WCURL) -> Bool {
+        return communicator.isConnected(by: url)
+    }
 
     /// Get all sessions with active connection.
     ///
